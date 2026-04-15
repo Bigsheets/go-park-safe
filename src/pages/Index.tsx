@@ -1,16 +1,113 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { MapPin, Loader2 } from "lucide-react";
+import ParkingResult from "@/components/ParkingResult";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+type ParkingStatus = "allowed" | "risky" | "not_allowed";
+
+interface ParkingInfo {
+  status: ParkingStatus;
+  title: string;
+  explanation: string;
+}
+
+function checkParking(): ParkingInfo {
+  const hour = new Date().getHours();
+  if (hour >= 2 && hour < 6) {
+    return {
+      status: "not_allowed",
+      title: "No Parking Right Now",
+      explanation: "Street cleaning or overnight restrictions are typically in effect between 2 AM and 6 AM. Move your car to avoid a ticket.",
+    };
+  }
+  return {
+    status: "allowed",
+    title: "Parking Looks OK",
+    explanation: "No known restrictions right now. Keep in mind most areas have a 3-hour parking limit unless otherwise posted.",
+  };
+}
+
+const Index = () => {
+  const [result, setResult] = useState<ParkingInfo | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  const handleCheck = () => {
+    setLoading(true);
+    setLocationError(null);
+    setResult(null);
+
+    if (!navigator.geolocation) {
+      setLocationError("Location not supported by your browser.");
+      setLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setTimeout(() => {
+          setResult(checkParking());
+          setLoading(false);
+        }, 800);
+      },
+      () => {
+        setLocationError("Could not get your location. Please enable GPS.");
+        setLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    setLocationError(null);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen flex flex-col items-center justify-between px-5 py-8 safe-area-inset">
+      {/* Header */}
+      <div className="text-center pt-8">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
+          <MapPin className="w-7 h-7 text-primary-foreground" />
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight">Can I Park Here?</h1>
+        <p className="text-muted-foreground mt-1 text-base">Instant parking guidance at your location</p>
+      </div>
+
+      {/* Main content */}
+      <div className="w-full max-w-sm flex flex-col items-center gap-6 -mt-8">
+        {result ? (
+          <ParkingResult info={result} onReset={handleReset} />
+        ) : (
+          <>
+            <button
+              onClick={handleCheck}
+              disabled={loading}
+              className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-xl font-semibold shadow-lg active:scale-[0.97] transition-transform disabled:opacity-70 flex items-center justify-center gap-3"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  Checking…
+                </>
+              ) : (
+                "Check Parking Here"
+              )}
+            </button>
+            {locationError && (
+              <p className="text-destructive text-sm text-center">{locationError}</p>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      <footer className="text-center pb-4 space-y-2">
+        <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+          This is guidance only. Always follow posted signs.
+        </p>
+      </footer>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
