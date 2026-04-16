@@ -1,37 +1,28 @@
-import { MapContainer, TileLayer, Marker, Circle } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
-// Fix default marker icons for Leaflet in bundlers
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
-
 interface Props {
   lat: number;
   lng: number;
 }
 
 const LocationMap = ({ lat, lng }: Props) => {
+  const mapSrc = `https://www.google.com/maps?q=${lat},${lng}&z=17&output=embed`;
+
   return (
-    <div className="w-full h-48 rounded-2xl overflow-hidden border border-border shadow-sm">
-      <MapContainer
-        center={[lat, lng]}
-        zoom={17}
-        scrollWheelZoom={false}
-        style={{ height: "100%", width: "100%" }}
-        attributionControl={false}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Marker position={[lat, lng]} />
-        <Circle center={[lat, lng]} radius={20} pathOptions={{ color: "hsl(var(--primary))" }} />
-      </MapContainer>
+    <div className="w-full rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="border-b border-border px-4 py-3">
+        <p className="text-sm font-medium text-foreground">Your location</p>
+        <p className="text-xs text-muted-foreground">Map centered on your current GPS position</p>
+      </div>
+
+      <div className="h-56 w-full bg-muted">
+        <iframe
+          title="Your current location on Google Maps"
+          src={mapSrc}
+          className="h-full w-full border-0"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          allowFullScreen
+        />
+      </div>
     </div>
   );
 };
