@@ -1,5 +1,6 @@
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import LocationMap from "./LocationMap";
 
 type ParkingStatus = "allowed" | "risky" | "not_allowed";
 
@@ -7,6 +8,8 @@ interface ParkingInfo {
   status: ParkingStatus;
   title: string;
   explanation: string;
+  lat?: number;
+  lng?: number;
 }
 
 const config: Record<ParkingStatus, { icon: typeof CheckCircle2; bg: string; border: string; text: string; iconColor: string }> = {
@@ -35,6 +38,10 @@ const ParkingResult = ({ info, onReset }: Props) => {
         <h2 className={`text-2xl font-bold ${c.text}`}>{info.title}</h2>
         <p className="text-foreground/80 text-base leading-relaxed">{info.explanation}</p>
       </div>
+
+      {info.lat !== undefined && info.lng !== undefined && (
+        <LocationMap lat={info.lat} lng={info.lng} />
+      )}
 
       <button
         onClick={onReset}
