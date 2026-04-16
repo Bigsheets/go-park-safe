@@ -8,21 +8,27 @@ interface ParkingInfo {
   status: ParkingStatus;
   title: string;
   explanation: string;
+  lat?: number;
+  lng?: number;
 }
 
-function checkParking(): ParkingInfo {
+function checkParking(lat: number, lng: number): ParkingInfo {
   const hour = new Date().getHours();
   if (hour >= 2 && hour < 6) {
     return {
       status: "not_allowed",
       title: "No Parking Right Now",
       explanation: "Street cleaning or overnight restrictions are typically in effect between 2 AM and 6 AM. Move your car to avoid a ticket.",
+      lat,
+      lng,
     };
   }
   return {
     status: "allowed",
     title: "Parking Looks OK",
     explanation: "No known restrictions right now. Keep in mind most areas have a 3-hour parking limit unless otherwise posted.",
+    lat,
+    lng,
   };
 }
 
@@ -43,9 +49,9 @@ const Index = () => {
     }
 
     navigator.geolocation.getCurrentPosition(
-      () => {
+      (pos) => {
         setTimeout(() => {
-          setResult(checkParking());
+          setResult(checkParking(pos.coords.latitude, pos.coords.longitude));
           setLoading(false);
         }, 800);
       },
