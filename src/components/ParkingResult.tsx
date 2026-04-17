@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import LocationMap from "./LocationMap";
@@ -12,50 +13,161 @@ interface ParkingInfo {
   lng?: number;
 }
 
-const config: Record<ParkingStatus, { icon: typeof CheckCircle2; bg: string; border: string; text: string; iconColor: string }> = {
-  allowed: { icon: CheckCircle2, bg: "bg-status-green-bg", border: "border-status-green/30", text: "text-status-green", iconColor: "text-status-green" },
-  risky: { icon: AlertTriangle, bg: "bg-status-yellow-bg", border: "border-status-yellow/30", text: "text-status-yellow", iconColor: "text-status-yellow" },
-  not_allowed: { icon: XCircle, bg: "bg-status-red-bg", border: "border-status-red/30", text: "text-status-red", iconColor: "text-status-red" },
-};
-
 interface Props {
   info: ParkingInfo;
   onReset: () => void;
 }
 
+type SignType = "no_parking" | "max_3h" | "permit_only" | "unknown";
+
+const config = {
+  allowed: {
+    icon: CheckCircle2,
+    bg: "bg-status-green-bg",
+    border: "border-status-green/30",
+    text: "text-status-green",
+    iconColor: "text-status-green",
+  },
+  risky: {
+    icon: AlertTriangle,
+    bg: "bg-status-yellow-bg",
+    border: "border-status-yellow/30",
+    text: "text-status-yellow",
+    iconColor: "text-status-yellow",
+  },
+  not_allowed: {
+    icon: XCircle,
+    bg: "bg-status-red-bg",
+    border: "border-status-red/30",
+    text: "text-status-red",
+    iconColor: "text-status-red",
+  },
+};
+
 const ParkingResult = ({ info, onReset }: Props) => {
   const c = config[info.status];
   const Icon = c.icon;
+
+  const [showLogForm, setShowLogForm] = useState(false);
+  const [signType, setSignType] = useState<SignType>("unknown");
+  const [streetSide, setStreetSide] = useState("not_sure");
+  const [notes, setNotes] = useState("");
 
   const handleReport = () => {
     toast.success("Thanks! Your report has been noted.");
   };
 
+  const handleSaveLog = () => {
+    const logEntry = {
+      signType,
+      streetSide,
+      notes,
+      lat: info.lat,
+      lng: info.lng,
+      createdAt: new Date().toISOString(),
+    };
+
+    const existingLogs = JSON.parse(localStorage.getItem("parking_logs") || "[]");
+    existingLogs.push(logEntry);
+    localStorage.setItem("parking_logs", JSON.stringify(existingLogs));
+
+    toast.success("Parking sign logged. Thanks for helping improve the app.");
+    setShowLogForm(false);
+    setSignType("unknown");
+    setStreetSide("not_sure");
+    setNotes("");
+  };
+
   return (
-    <div className="w-full space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className={`${c.bg} border ${c.border} rounded-2xl p-6 text-center space-y-3`}>
-        <Icon className={`w-14 h-14 mx-auto ${c.iconColor}`} />
-        <h2 className={`text-2xl font-bold ${c.text}`}>{info.title}</h2>
-        <p className="text-foreground/80 text-base leading-relaxed">{info.explanation}</p>
+    <div className="w-full space-y-4 animate-fade-in">
+      <div className={`rounded-3xl border p-5 shadow-sm ${c.bg} ${c.border}`}>
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5">
+            <Icon className={`w-7 h-7 ${c.iconColor}`} />
+          </div>
+          <div className="flex-1">
+            <h2 className={`text-xl font-semibold ${c.text}`}>{info.title}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-foreground/90">
+              {info.explanation}
+            </p>
+          </div>
+        </div>
       </div>
 
       {info.lat !== undefined && info.lng !== undefined && (
         <LocationMap lat={info.lat} lng={info.lng} />
       )}
 
-      <button
-        onClick={onReset}
-        className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-lg font-semibold active:scale-[0.97] transition-transform"
-      >
-        Check Again
-      </button>
+      <div className="grid grid-cols-1 gap-3">
+        <button
+          onClick={() => setShowLogForm((prev) => !prev)}
+          className="w-full py-4 rounded-2xl border border-border bg-card text-card-foreground font-medium shadow-sm active:scale-[0.98] transition-transform"
+        >
+          {showLogForm ? "Close Sign Form" : "Log a Parking Sign Here"}
+        </button>
 
-      <button
-        onClick={handleReport}
-        className="block mx-auto text-sm text-muted-foreground underline underline-offset-2"
-      >
-        Report incorrect result
-      </button>
+        {showLogForm && (
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-sm">
+            <div>
+              <label className="block text-sm font-medium mb-2">Sign type</label>
+              <select
+                value={signType}
+                onChange={(e) => setSignType(e.target.value as SignType)}
+                className="w-full rounded-xl border border-input bg-background px-3 py-3 text-sm"
+              >
+                <option value="unknown">Unknown / Other</option>
+                <option value="no_parking">No parking</option>
+                <option value="max_3h">3-hour limit</option>
+                <option value="permit_only">Permit only</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Side of street</label>
+              <select
+                value={streetSide}
+                onChange={(e) => setStreetSide(e.target.value)}
+                className="w-full rounded-xl border border-input bg-background px-3 py-3 text-sm"
+              >
+                <option value="not_sure">Not sure</option>
+                <option value="left">Left side</option>
+                <option value="right">Right side</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Notes (optional)</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Example: Sign says 3-hour parking 8 AM to 6 PM, Mon to Sat."
+                className="w-full rounded-xl border border-input bg-background px-3 py-3 text-sm min-h-[96px] resize-none"
+              />
+            </div>
+
+            <button
+              onClick={handleSaveLog}
+              className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-sm active:scale-[0.98] transition-transform"
+            >
+              Save Sign Log
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={onReset}
+          className="w-full py-4 rounded-2xl border border-border bg-background font-medium active:scale-[0.98] transition-transform"
+        >
+          Check Again
+        </button>
+
+        <button
+          onClick={handleReport}
+          className="w-full py-4 rounded-2xl border border-border bg-background font-medium active:scale-[0.98] transition-transform"
+        >
+          Report Incorrect Result
+        </button>
+      </div>
     </div>
   );
 };
