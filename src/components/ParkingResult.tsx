@@ -71,7 +71,7 @@ const ParkingResult = ({ info, onReset }: Props) => {
     existingLogs.push(logEntry);
     localStorage.setItem("parking_logs", JSON.stringify(existingLogs));
 
-    toast.success("Parking sign logged. Thanks for helping improve the app.");
+    toast.success("Posted parking rule added. Thanks for helping improve the app.");
     setShowLogForm(false);
     setSignType("unknown");
     setStreetSide("not_sure");
@@ -103,11 +103,15 @@ const ParkingResult = ({ info, onReset }: Props) => {
           onClick={() => setShowLogForm((prev) => !prev)}
           className="w-full py-4 rounded-2xl border border-border bg-card text-card-foreground font-medium shadow-sm active:scale-[0.98] transition-transform"
         >
-          {showLogForm ? "Close Sign Form" : "Log a Parking Sign Here"}
+          {showLogForm ? "Close Form" : "Add Posted Parking Rule"}
         </button>
 
         {showLogForm && (
           <div className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-sm">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Only report posted parking signs or marked parking restrictions. Do not log fire hydrants, driveways, or temporary obstacles.
+            </p>
+
             <div>
               <label className="block text-sm font-medium mb-2">Sign type</label>
               <select
@@ -115,10 +119,10 @@ const ParkingResult = ({ info, onReset }: Props) => {
                 onChange={(e) => setSignType(e.target.value as SignType)}
                 className="w-full rounded-xl border border-input bg-background px-3 py-3 text-sm"
               >
-                <option value="unknown">Unknown / Other</option>
-                <option value="no_parking">No parking</option>
-                <option value="max_3h">3-hour limit</option>
-                <option value="permit_only">Permit only</option>
+                <option value="unknown">Other posted restriction</option>
+                <option value="no_parking">No parking sign</option>
+                <option value="max_3h">3-hour parking sign</option>
+                <option value="permit_only">Permit parking sign</option>
               </select>
             </div>
 
@@ -149,7 +153,7 @@ const ParkingResult = ({ info, onReset }: Props) => {
               onClick={handleSaveLog}
               className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-sm active:scale-[0.98] transition-transform"
             >
-              Save Sign Log
+              Save Posted Rule
             </button>
           </div>
         )}
