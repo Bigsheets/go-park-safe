@@ -1,3 +1,4 @@
+import { evaluateParking } from "@/lib/parkingRules";
 import { useState } from "react";
 import { MapPin, Loader2 } from "lucide-react";
 import ParkingResult from "@/components/ParkingResult";
@@ -10,26 +11,6 @@ interface ParkingInfo {
   explanation: string;
   lat?: number;
   lng?: number;
-}
-
-function checkParking(lat: number, lng: number): ParkingInfo {
-  const hour = new Date().getHours();
-  if (hour >= 2 && hour < 6) {
-    return {
-      status: "not_allowed",
-      title: "No Parking Right Now",
-      explanation: "Street cleaning or overnight restrictions are typically in effect between 2 AM and 6 AM. Move your car to avoid a ticket.",
-      lat,
-      lng,
-    };
-  }
-  return {
-    status: "allowed",
-    title: "Parking Looks OK",
-    explanation: "No known restrictions right now. Keep in mind most areas have a 3-hour parking limit unless otherwise posted.",
-    lat,
-    lng,
-  };
 }
 
 const Index = () => {
@@ -51,7 +32,19 @@ const Index = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setTimeout(() => {
-          setResult(checkParking(pos.coords.latitude, pos.coords.longitude));
+          const parkingResult = evaluateParking({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+
+          setResult({
+            status: parkingResult.status,
+            title: parkingResult.title,
+            explanation: parkingResult.explanation,
+            lat: parkingResult.lat,
+            lng: parkingResult.lng,
+          });
+
           setLoading(false);
         }, 800);
       },
@@ -70,16 +63,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-between px-5 py-8 safe-area-inset">
-      {/* Header */}
       <div className="text-center pt-8">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
           <MapPin className="w-7 h-7 text-primary-foreground" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight">Can I Park Here?</h1>
-        <p className="text-muted-foreground mt-1 text-base">Instant parking guidance at your location</p>
+        <p className="text-muted-foreground mt-1 text-base">
+          Instant parking guidance at your location
+        </p>
       </div>
 
-      {/* Main content */}
       <div className="w-full max-w-sm flex flex-col items-center gap-6 -mt-8">
         {result ? (
           <ParkingResult info={result} onReset={handleReset} />
@@ -99,6 +92,7 @@ const Index = () => {
                 "Check Parking Here"
               )}
             </button>
+
             {locationError && (
               <p className="text-destructive text-sm text-center">{locationError}</p>
             )}
@@ -106,7 +100,6 @@ const Index = () => {
         )}
       </div>
 
-      {/* Footer */}
       <footer className="text-center pb-4 space-y-2">
         <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
           This is guidance only. Always follow posted signs.
