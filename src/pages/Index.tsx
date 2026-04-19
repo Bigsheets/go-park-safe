@@ -21,7 +21,7 @@ interface NearbyReport {
 }
 
 async function findNearbyReport(lat: number, lng: number): Promise<NearbyReport | null> {
-  const delta = 0.0003; // ~30m bounding box
+  const delta = 0.0001; // ~30m bounding box
   const { data, error } = await supabase
     .from("parking_reports")
     .select("sign_type, notes, lat, lng")
