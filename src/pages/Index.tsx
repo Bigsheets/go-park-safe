@@ -13,6 +13,33 @@ interface ParkingInfo {
   lng?: number;
 }
 
+interface ParkingLog {
+  signType: "no_parking" | "max_3h" | "permit_only" | "unknown";
+  notes?: string;
+  lat?: number;
+  lng?: number;
+  createdAt: string;
+}
+
+function findNearbyLog(lat: number, lng: number): ParkingLog | null {
+  const logs: ParkingLog[] = JSON.parse(localStorage.getItem("parking_logs") || "[]");
+
+  if (!logs.length) return null;
+
+  const maxDistance = 0.0001;
+
+  const nearbyLog = logs.find((log) => {
+    if (typeof log.lat !== "number" || typeof log.lng !== "number") return false;
+
+    const latDiff = Math.abs(log.lat - lat);
+    const lngDiff = Math.abs(log.lng - lng);
+
+    return latDiff <= maxDistance && lngDiff <= maxDistance;
+  });
+
+  return nearbyLog ?? null;
+}
+
 const Index = () => {
   const [result, setResult] = useState<ParkingInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,9 +59,21 @@ const Index = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setTimeout(() => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          const nearbyLog = findNearbyLog(lat, lng);
+
           const parkingResult = evaluateParking({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
+            lat,
+            lng,
+            loggedRule: nearbyLog
+              ? {
+                  type: nearbyLog.signType,
+                  verified: false,
+                  notes: nearbyLog.notes,
+                }
+              : null,
           });
 
           setResult({
