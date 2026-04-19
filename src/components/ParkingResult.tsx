@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import LocationMap from "./LocationMap";
+import { supabase } from "@/integrations/supabase/client";
 
 type ParkingStatus = "allowed" | "risky" | "not_allowed";
 
@@ -56,18 +57,23 @@ const ParkingResult = ({ info, onReset }: Props) => {
     toast.success("Thanks! Your report has been noted.");
   };
 
-  const handleSaveLog = () => {
-    const logEntry = {
-      signType,
-      notes,
+  const handleSaveLog = async () => {
+    if (info.lat === undefined || info.lng === undefined) {
+      toast.error("Missing location for this report.");
+      return;
+    }
+
+    const { error } = await supabase.from("parking_reports").insert({
+      sign_type: signType,
+      notes: notes || null,
       lat: info.lat,
       lng: info.lng,
-      createdAt: new Date().toISOString(),
-    };
+    });
 
-    const existingLogs = JSON.parse(localStorage.getItem("parking_logs") || "[]");
-    existingLogs.push(logEntry);
-    localStorage.setItem("parking_logs", JSON.stringify(existingLogs));
+    if (error) {
+      toast.error("Could not save report. Please try again.");
+      return;
+    }
 
     toast.success("Posted parking rule added. Thanks for helping improve the app.");
     setShowLogForm(false);
