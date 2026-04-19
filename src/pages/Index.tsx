@@ -2,8 +2,10 @@ import { evaluateParking } from "@/lib/parkingRules";
 import { useState } from "react";
 import { MapPin, Loader2 } from "lucide-react";
 import ParkingResult from "@/components/ParkingResult";
+import { supabase } from "@/integrations/supabase/client";
 
 type ParkingStatus = "allowed" | "risky" | "not_allowed";
+type SignType = "no_parking" | "max_3h" | "permit_only" | "unknown";
 
 interface ParkingInfo {
   status: ParkingStatus;
@@ -13,31 +15,29 @@ interface ParkingInfo {
   lng?: number;
 }
 
-interface ParkingLog {
-  signType: "no_parking" | "max_3h" | "permit_only" | "unknown";
-  notes?: string;
-  lat?: number;
-  lng?: number;
-  createdAt: string;
+interface NearbyReport {
+  signType: SignType;
+  notes?: string | null;
 }
 
-function findNearbyLog(lat: number, lng: number): ParkingLog | null {
-  const logs: ParkingLog[] = JSON.parse(localStorage.getItem("parking_logs") || "[]");
+async function findNearbyReport(lat: number, lng: number): Promise<NearbyReport | null> {
+  const delta = 0.0003; // ~30m bounding box
+  const { data, error } = await supabase
+    .from("parking_reports")
+    .select("sign_type, notes, lat, lng")
+    .gte("lat", lat - delta)
+    .lte("lat", lat + delta)
+    .gte("lng", lng - delta)
+    .lte("lng", lng + delta)
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-  if (!logs.length) return null;
+  if (error || !data || data.length === 0) return null;
 
-  const maxDistance = 0.0001;
-
-  const nearbyLog = logs.find((log) => {
-    if (typeof log.lat !== "number" || typeof log.lng !== "number") return false;
-
-    const latDiff = Math.abs(log.lat - lat);
-    const lngDiff = Math.abs(log.lng - lng);
-
-    return latDiff <= maxDistance && lngDiff <= maxDistance;
-  });
-
-  return nearbyLog ?? null;
+  return {
+    signType: data[0].sign_type as SignType,
+    notes: data[0].notes,
+  };
 }
 
 const Index = () => {
@@ -57,24 +57,23 @@ const Index = () => {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setTimeout(() => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
 
-          const nearbyLog = findNearbyLog(lat, lng);
+        const nearbyReport = await findNearbyReport(lat, lng);
 
-          const parkingResult = evaluateParking({
-            lat,
-            lng,
-            loggedRule: nearbyLog
-              ? {
-                  type: nearbyLog.signType,
-                  verified: false,
-                  notes: nearbyLog.notes,
-                }
-              : null,
-          });
+        const parkingResult = evaluateParking({
+          lat,
+          lng,
+          loggedRule: nearbyReport
+            ? {
+                type: nearbyReport.signType,
+                verified: false,
+                notes: nearbyReport.notes ?? undefined,
+              }
+            : null,
+        });
 
           setResult({
             status: parkingResult.status,
