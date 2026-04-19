@@ -50,7 +50,6 @@ const ParkingResult = ({ info, onReset }: Props) => {
 
   const [showLogForm, setShowLogForm] = useState(false);
   const [signType, setSignType] = useState<SignType>("unknown");
-  const [streetSide, setStreetSide] = useState("not_sure");
   const [notes, setNotes] = useState("");
 
   const handleReport = () => {
@@ -60,7 +59,6 @@ const ParkingResult = ({ info, onReset }: Props) => {
   const handleSaveLog = () => {
     const logEntry = {
       signType,
-      streetSide,
       notes,
       lat: info.lat,
       lng: info.lng,
@@ -74,12 +72,12 @@ const ParkingResult = ({ info, onReset }: Props) => {
     toast.success("Posted parking rule added. Thanks for helping improve the app.");
     setShowLogForm(false);
     setSignType("unknown");
-    setStreetSide("not_sure");
     setNotes("");
   };
 
   return (
     <div className="w-full space-y-4 animate-fade-in">
+      {/* Result Card */}
       <div className={`rounded-3xl border p-5 shadow-sm ${c.bg} ${c.border}`}>
         <div className="flex items-start gap-3">
           <div className="mt-0.5">
@@ -94,11 +92,14 @@ const ParkingResult = ({ info, onReset }: Props) => {
         </div>
       </div>
 
+      {/* Map */}
       {info.lat !== undefined && info.lng !== undefined && (
         <LocationMap lat={info.lat} lng={info.lng} />
       )}
 
+      {/* Actions */}
       <div className="grid grid-cols-1 gap-3">
+        {/* Log Button */}
         <button
           onClick={() => setShowLogForm((prev) => !prev)}
           className="w-full py-4 rounded-2xl border border-border bg-card text-card-foreground font-medium shadow-sm active:scale-[0.98] transition-transform"
@@ -106,10 +107,12 @@ const ParkingResult = ({ info, onReset }: Props) => {
           {showLogForm ? "Close Form" : "Add Posted Parking Rule"}
         </button>
 
+        {/* Log Form */}
         {showLogForm && (
           <div className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-sm">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Only report posted parking signs or marked parking restrictions. Do not log fire hydrants, driveways, or temporary obstacles.
+              Only report posted parking signs or marked parking restrictions.
+              Do not log fire hydrants, driveways, or temporary obstacles.
             </p>
 
             <div>
@@ -127,24 +130,11 @@ const ParkingResult = ({ info, onReset }: Props) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Side of street</label>
-              <select
-                value={streetSide}
-                onChange={(e) => setStreetSide(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background px-3 py-3 text-sm"
-              >
-                <option value="not_sure">Not sure</option>
-                <option value="left">Left side</option>
-                <option value="right">Right side</option>
-              </select>
-            </div>
-
-            <div>
               <label className="block text-sm font-medium mb-2">Notes (optional)</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Example: Sign says 3-hour parking 8 AM to 6 PM, Mon to Sat."
+                placeholder="Example: No parking Mon–Fri 8 AM to 6 PM."
                 className="w-full rounded-xl border border-input bg-background px-3 py-3 text-sm min-h-[96px] resize-none"
               />
             </div>
@@ -158,6 +148,7 @@ const ParkingResult = ({ info, onReset }: Props) => {
           </div>
         )}
 
+        {/* Reset */}
         <button
           onClick={onReset}
           className="w-full py-4 rounded-2xl border border-border bg-background font-medium active:scale-[0.98] transition-transform"
@@ -165,6 +156,7 @@ const ParkingResult = ({ info, onReset }: Props) => {
           Check Again
         </button>
 
+        {/* Report */}
         <button
           onClick={handleReport}
           className="w-full py-4 rounded-2xl border border-border bg-background font-medium active:scale-[0.98] transition-transform"
