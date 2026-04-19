@@ -23,12 +23,12 @@ export interface ParkingContext {
 }
 
 function isWinterBanSeason(date: Date): boolean {
-  const month = date.getMonth(); // Jan = 0
+  const month = date.getMonth();
   const day = date.getDate();
 
-  if (month === 0) return true; // January
-  if (month === 1) return true; // February
-  if (month === 2 && day <= 15) return true; // March 1-15
+  if (month === 0) return true;
+  if (month === 1) return true;
+  if (month === 2 && day <= 15) return true;
 
   return false;
 }
@@ -38,8 +38,8 @@ function isBetween230And6(date: Date): boolean {
   const minutes = date.getMinutes();
   const totalMinutes = hours * 60 + minutes;
 
-  const start = 2 * 60 + 30; // 2:30 AM
-  const end = 6 * 60; // 6:00 AM
+  const start = 2 * 60 + 30;
+  const end = 6 * 60;
 
   return totalMinutes >= start && totalMinutes < end;
 }
@@ -49,7 +49,6 @@ export function evaluateParking(context: ParkingContext): ParkingInfo {
   const inWinterBanSeason = isWinterBanSeason(now);
   const inOvernightWindow = isBetween230And6(now);
 
-  // Snow event rule
   if (context.isSnowEvent) {
     return {
       status: "not_allowed",
@@ -62,7 +61,6 @@ export function evaluateParking(context: ParkingContext): ParkingInfo {
     };
   }
 
-  // Winter overnight citywide rule
   if (inWinterBanSeason && inOvernightWindow) {
     return {
       status: "not_allowed",
@@ -75,14 +73,13 @@ export function evaluateParking(context: ParkingContext): ParkingInfo {
     };
   }
 
-  // Logged local/community rule
   if (context.loggedRule) {
     if (context.loggedRule.type === "no_parking") {
       return {
-        status: "not_allowed",
-        title: "No Parking Reported Here",
+        status: "risky",
+        title: "No Parking Rule Reported Nearby",
         explanation:
-          "A posted no-parking restriction has been reported for this location. Check the nearby sign to confirm the exact times and conditions.",
+          "A posted no-parking rule was reported very close to this location. Check the nearby sign carefully before parking here.",
         confidence: context.loggedRule.verified ? "high" : "medium",
         lat: context.lat,
         lng: context.lng,
@@ -92,9 +89,9 @@ export function evaluateParking(context: ParkingContext): ParkingInfo {
     if (context.loggedRule.type === "max_3h") {
       return {
         status: "risky",
-        title: "3-Hour Parking Limit Reported Here",
+        title: "3-Hour Parking Limit Reported Nearby",
         explanation:
-          "A posted 3-hour parking limit has been reported for this location. Do not rely on citywide guidance alone—check nearby signs before leaving your vehicle.",
+          "A posted 3-hour parking limit was reported very close to this location. Check nearby signs before leaving your vehicle.",
         confidence: context.loggedRule.verified ? "high" : "medium",
         lat: context.lat,
         lng: context.lng,
@@ -103,18 +100,29 @@ export function evaluateParking(context: ParkingContext): ParkingInfo {
 
     if (context.loggedRule.type === "permit_only") {
       return {
-        status: "not_allowed",
-        title: "Permit Parking Reported Here",
+        status: "risky",
+        title: "Permit Parking Reported Nearby",
         explanation:
-          "Permit-only parking has been reported for this location. Confirm the posted sign before parking here.",
+          "Permit-only parking was reported very close to this location. Confirm the posted sign before parking here.",
         confidence: context.loggedRule.verified ? "high" : "medium",
+        lat: context.lat,
+        lng: context.lng,
+      };
+    }
+
+    if (context.loggedRule.type === "unknown") {
+      return {
+        status: "risky",
+        title: "Posted Restriction Reported Nearby",
+        explanation:
+          "A posted parking restriction was reported very close to this location. Check nearby signs carefully before parking.",
+        confidence: "medium",
         lat: context.lat,
         lng: context.lng,
       };
     }
   }
 
-  // General Cambridge daytime guidance
   if (inWinterBanSeason) {
     return {
       status: "risky",
@@ -127,7 +135,6 @@ export function evaluateParking(context: ParkingContext): ParkingInfo {
     };
   }
 
-  // Non-winter general guidance
   return {
     status: "risky",
     title: "Check Signs Before Parking",
