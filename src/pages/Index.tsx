@@ -75,16 +75,15 @@ const Index = () => {
             : null,
         });
 
-          setResult({
-            status: parkingResult.status,
-            title: parkingResult.title,
-            explanation: parkingResult.explanation,
-            lat: parkingResult.lat,
-            lng: parkingResult.lng,
-          });
+        setResult({
+          status: parkingResult.status,
+          title: parkingResult.title,
+          explanation: parkingResult.explanation,
+          lat: parkingResult.lat,
+          lng: parkingResult.lng,
+        });
 
-          setLoading(false);
-        }, 800);
+        setLoading(false);
       },
       () => {
         setLocationError("Could not get your location. Please enable GPS.");
