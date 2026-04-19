@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { CheckCircle2, AlertTriangle, XCircle, MapPin, Flag } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  MapPin,
+  Flag,
+  Clock3,
+  CarFront,
+} from "lucide-react";
 import { toast } from "sonner";
 import LocationMap from "./LocationMap";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +28,17 @@ interface Props {
 }
 
 type SignType = "no_parking" | "max_3h" | "permit_only" | "unknown";
+
+interface ParkedSession {
+  parkedAt: string;
+  expiresAt: string;
+  lat?: number;
+  lng?: number;
+  title: string;
+}
+
+const PARKED_SESSION_KEY = "active_parked_session";
+const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 
 const config = {
   allowed: {
@@ -48,6 +67,24 @@ const config = {
   },
 };
 
+function formatTime(dateString: string): string {
+  return new Date(dateString).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatRemaining(ms: number): string {
+  if (ms <= 0) return "Time is up";
+
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours <= 0) return `${minutes}m remaining`;
+  return `${hours}h ${minutes}m remaining`;
+}
+
 const ParkingResult = ({ info, onReset }: Props) => {
   const c = config[info.status];
   const Icon = c.icon;
@@ -56,6 +93,35 @@ const ParkingResult = ({ info, onReset }: Props) => {
   const [signType, setSignType] = useState<SignType>("unknown");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [parkedSession, setParkedSession] = useState<ParkedSession | null>(null);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const saved = localStorage.getItem(PARKED_SESSION_KEY);
+    if (saved) {
+      try {
+        setParkedSession(JSON.parse(saved));
+      } catch {
+        localStorage.removeItem(PARKED_SESSION_KEY);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!parkedSession) return;
+
+    const interval = window.setInterval(() => {
+      setNow(Date.now());
+    }, 30000);
+
+    return () => window.clearInterval(interval);
+  }, [parkedSession]);
+
+  const remainingMs = useMemo(() => {
+    if (!parkedSession) return 0;
+    return new Date(parkedSession.expiresAt).getTime() - now;
+  }, [parkedSession, now]);
 
   const handleReport = () => {
     toast.success("Thanks. Your feedback has been noted.");
@@ -87,6 +153,31 @@ const ParkingResult = ({ info, onReset }: Props) => {
     setShowLogForm(false);
     setSignType("unknown");
     setNotes("");
+  };
+
+  const handleParkHere = () => {
+    const parkedAt = new Date();
+    const expiresAt = new Date(parkedAt.getTime() + THREE_HOURS_MS);
+
+    const session: ParkedSession = {
+      parkedAt: parkedAt.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+      lat: info.lat,
+      lng: info.lng,
+      title: info.title,
+    };
+
+    localStorage.setItem(PARKED_SESSION_KEY, JSON.stringify(session));
+    setParkedSession(session);
+    setNow(Date.now());
+
+    toast.success("Parking timer started.");
+  };
+
+  const handleClearTimer = () => {
+    localStorage.removeItem(PARKED_SESSION_KEY);
+    setParkedSession(null);
+    toast.success("Parking timer cleared.");
   };
 
   return (
@@ -138,10 +229,54 @@ const ParkingResult = ({ info, onReset }: Props) => {
         </div>
       )}
 
+      {/* Parking Timer */}
+      {parkedSession ? (
+        <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted">
+              <Clock3 className="h-5 w-5 text-muted-foreground" />
+            </div>
+
+            <div className="flex-1">
+              <p className="text-sm font-semibold">You parked here</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Parked at {formatTime(parkedSession.parkedAt)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Return by {formatTime(parkedSession.expiresAt)}
+              </p>
+              <p className="mt-3 text-base font-semibold">
+                {formatRemaining(remainingMs)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Based on general 3-hour parking guidance.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleClearTimer}
+            className="mt-4 w-full rounded-2xl border border-border bg-background py-3.5 font-medium text-muted-foreground transition-transform active:scale-[0.98]"
+          >
+            Clear Timer
+          </button>
+        </div>
+      ) : (
+        info.status !== "not_allowed" && (
+          <button
+            onClick={handleParkHere}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-primary py-4 text-base font-semibold text-primary-foreground shadow-lg transition-transform active:scale-[0.98]"
+          >
+            <CarFront className="h-5 w-5" />
+            I Parked Here
+          </button>
+        )
+      )}
+
       {/* Primary Action */}
       <button
         onClick={onReset}
-        className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-base font-semibold shadow-lg active:scale-[0.98] transition-transform"
+        className="w-full py-4 rounded-2xl border border-border bg-card text-card-foreground text-base font-medium shadow-sm active:scale-[0.98] transition-transform"
       >
         Check Another Spot
       </button>
