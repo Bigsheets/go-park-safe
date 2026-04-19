@@ -14,7 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      parking_reports: {
+        Row: {
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          notes: string | null
+          sign_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          notes?: string | null
+          sign_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          notes?: string | null
+          sign_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
