@@ -1,6 +1,6 @@
 import { evaluateParking } from "@/lib/parkingRules";
 import { useState } from "react";
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPin, Loader2, ShieldCheck } from "lucide-react";
 import ParkingResult from "@/components/ParkingResult";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,7 +21,7 @@ interface NearbyReport {
 }
 
 async function findNearbyReport(lat: number, lng: number): Promise<NearbyReport | null> {
-  const delta = 0.0001; // 🔥 tighter radius (~10–15m)
+  const delta = 0.0001;
 
   const { data, error } = await supabase
     .from("parking_reports")
@@ -100,49 +100,89 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between px-5 py-8 safe-area-inset">
-      <div className="text-center pt-8">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
-          <MapPin className="w-7 h-7 text-primary-foreground" />
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight">Can I Park Here?</h1>
-        <p className="text-muted-foreground mt-1 text-base">
-          Instant parking guidance at your location
-        </p>
-      </div>
+    <div className="min-h-screen bg-background px-5 py-8 safe-area-inset">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-sm flex-col justify-between">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="pt-6 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-lg">
+              <MapPin className="h-8 w-8 text-primary-foreground" />
+            </div>
 
-      <div className="w-full max-w-sm flex flex-col items-center gap-6 -mt-8">
-        {result ? (
-          <ParkingResult info={result} onReset={handleReset} />
-        ) : (
-          <>
-            <button
-              onClick={handleCheck}
-              disabled={loading}
-              className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-xl font-semibold shadow-lg active:scale-[0.97] transition-transform disabled:opacity-70 flex items-center justify-center gap-3"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  Checking…
-                </>
-              ) : (
-                "Check Parking Here"
+            <h1 className="text-3xl font-bold tracking-tight">Can I Park Here?</h1>
+            <p className="mt-2 text-base text-muted-foreground">
+              Quick parking guidance for Cambridge streets
+            </p>
+          </div>
+
+          {result ? (
+            <ParkingResult info={result} onReset={handleReset} />
+          ) : (
+            <>
+              {/* Intro Card */}
+              <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted">
+                    <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight">
+                      Check before you park
+                    </h2>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      Get guidance based on Cambridge parking rules and nearby
+                      user-reported restrictions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Action */}
+              <button
+                onClick={handleCheck}
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-3 rounded-3xl bg-primary px-5 py-5 text-xl font-semibold text-primary-foreground shadow-lg transition-transform active:scale-[0.98] disabled:opacity-70"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    Checking…
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="h-6 w-6" />
+                    Check Parking Here
+                  </>
+                )}
+              </button>
+
+              {/* Error */}
+              {locationError && (
+                <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-center">
+                  <p className="text-sm text-destructive">{locationError}</p>
+                </div>
               )}
-            </button>
 
-            {locationError && (
-              <p className="text-destructive text-sm text-center">{locationError}</p>
-            )}
-          </>
+              {/* Small helper copy */}
+              <div className="rounded-2xl bg-muted/50 px-4 py-3">
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Results are guidance only. Always check posted signs, temporary
+                  restrictions, snow event rules, and permit requirements.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        {!result && (
+          <footer className="pt-8 text-center">
+            <p className="text-xs text-muted-foreground">
+              Built to make local parking rules easier to understand
+            </p>
+          </footer>
         )}
       </div>
-
-      <footer className="text-center pb-4 space-y-2">
-        <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-          This is guidance only. Always follow posted signs.
-        </p>
-      </footer>
     </div>
   );
 };
