@@ -27,12 +27,20 @@
     --ring: 220 18% 20%;
     --radius: 1rem;
 
-    --status-green: 152 60% 42%;
-    --status-green-bg: 152 50% 95%;
-    --status-yellow: 40 90% 50%;
-    --status-yellow-bg: 40 80% 95%;
-    --status-red: 0 72% 51%;
-    --status-red-bg: 0 60% 96%;
+    --status-green: 152 65% 38%;
+    --status-green-bg: 152 60% 94%;
+    --status-yellow: 38 95% 48%;
+    --status-yellow-bg: 42 95% 93%;
+    --status-red: 0 75% 50%;
+    --status-red-bg: 0 75% 95%;
+    --status-blue: 217 91% 55%;
+    --status-blue-bg: 214 95% 95%;
+
+    --gradient-green: linear-gradient(135deg, hsl(152 60% 94%), hsl(165 65% 90%));
+    --gradient-yellow: linear-gradient(135deg, hsl(42 95% 93%), hsl(32 95% 88%));
+    --gradient-red: linear-gradient(135deg, hsl(0 75% 95%), hsl(12 80% 92%));
+    --gradient-blue: linear-gradient(135deg, hsl(214 95% 95%), hsl(224 90% 92%));
+    --gradient-app: linear-gradient(180deg, hsl(214 60% 98%), hsl(220 20% 97%));
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
