@@ -28,7 +28,7 @@ const Index = () => {
               {/* Primary action */}
               <button
                 onClick={() => setFlowOpen(true)}
-                className="flex w-full items-center justify-center gap-3 rounded-3xl bg-primary px-5 py-5 text-xl font-semibold text-primary-foreground shadow-lg transition-transform active:scale-[0.98]"
+                className="flex w-full items-center justify-center gap-3 rounded-3xl bg-status-blue px-5 py-5 text-xl font-semibold text-white shadow-lg shadow-status-blue/25 transition-transform active:scale-[0.97]"
               >
                 <MapPin className="h-6 w-6" />
                 Check if I can park here
