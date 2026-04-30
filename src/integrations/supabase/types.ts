@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      parking_logs: {
+        Row: {
+          created_at: string
+          driveway: boolean | null
+          hydrant: boolean | null
+          id: string
+          lat: number | null
+          lng: number | null
+          note: string | null
+          photo_url: string | null
+          result: string
+          sign: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          driveway?: boolean | null
+          hydrant?: boolean | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          note?: string | null
+          photo_url?: string | null
+          result: string
+          sign?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          driveway?: boolean | null
+          hydrant?: boolean | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          note?: string | null
+          photo_url?: string | null
+          result?: string
+          sign?: boolean | null
+        }
+        Relationships: []
+      }
       parking_reports: {
         Row: {
           created_at: string
