@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      parking_sessions: {
+        Row: {
+          created_at: string
+          driveway: boolean | null
+          hydrant: boolean | null
+          id: string
+          lat: number | null
+          lng: number | null
+          reason: string | null
+          result: string
+          sign: boolean | null
+          timer_started: boolean
+          user_parked: boolean
+        }
+        Insert: {
+          created_at?: string
+          driveway?: boolean | null
+          hydrant?: boolean | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          reason?: string | null
+          result: string
+          sign?: boolean | null
+          timer_started?: boolean
+          user_parked?: boolean
+        }
+        Update: {
+          created_at?: string
+          driveway?: boolean | null
+          hydrant?: boolean | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          reason?: string | null
+          result?: string
+          sign?: boolean | null
+          timer_started?: boolean
+          user_parked?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
