@@ -58,6 +58,8 @@ export default {
           "yellow-bg": "hsl(var(--status-yellow-bg))",
           red: "hsl(var(--status-red))",
           "red-bg": "hsl(var(--status-red-bg))",
+          blue: "hsl(var(--status-blue))",
+          "blue-bg": "hsl(var(--status-blue-bg))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
