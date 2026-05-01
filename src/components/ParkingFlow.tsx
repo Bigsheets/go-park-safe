@@ -831,37 +831,37 @@ const ParkingFlow = ({ onExit }: Props) => {
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-status-blue" />
-            <p className="text-sm font-medium">Reminders</p>
-          </div>
-          <div className="mt-3 space-y-2">
-            {(
-              [
-                { key: "fifteen", label: "15 minutes before" },
-                { key: "ten", label: "10 minutes before" },
-                { key: "expiry", label: "At expiry" },
-              ] as const
-            ).map((opt) => (
-              <label
-                key={opt.key}
-                className="flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3 cursor-pointer"
-              >
-                <span className="text-sm">{opt.label}</span>
-                <input
-                  type="checkbox"
-                  checked={reminders[opt.key]}
-                  onChange={(e) =>
-                    setReminders((prev) => ({
-                      ...prev,
-                      [opt.key]: e.target.checked,
-                    }))
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-status-blue" />
+              <p className="text-sm font-medium">
+                {notifPermission === "granted" && reminderTimeouts.current.length > 0
+                  ? "Reminders enabled"
+                  : "Notifications not enabled"}
+              </p>
+            </div>
+            {notifPermission !== "granted" && notifPermission !== "unsupported" && (
+              <button
+                onClick={async () => {
+                  const p = await requestNotifPermission();
+                  if (p === "granted" && timerEndsAt) {
+                    scheduleReminders(timerEndsAt);
+                    toast.success("Reminders enabled.");
+                  } else if (p === "denied") {
+                    toast.error("Notifications blocked in your browser.");
                   }
-                  className="h-4 w-4 accent-status-blue"
-                />
-              </label>
-            ))}
+                }}
+                className="rounded-full bg-status-blue px-3 py-1 text-xs font-semibold text-white active:scale-[0.97] transition-transform"
+              >
+                Enable
+              </button>
+            )}
           </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            {notifPermission === "granted" && reminderTimeouts.current.length > 0
+              ? "We'll remind you 15 min before, 5 min before, and at expiry."
+              : "Notifications are not enabled. Keep this screen open to track your timer."}
+          </p>
         </div>
 
         <button
