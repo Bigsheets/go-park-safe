@@ -89,6 +89,7 @@ const resultStyles: Record<
     iconClass: string;
     label: string;
     ringClass: string;
+    iconRingClass: string;
   }
 > = {
   ok: {
