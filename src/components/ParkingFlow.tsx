@@ -499,73 +499,87 @@ const ParkingFlow = ({ onExit }: Props) => {
     const Icon = c.icon;
     const isNo = state.resultKind === "no";
 
+    const confidenceLabel =
+      state.confidence === "high"
+        ? "High confidence"
+        : state.confidence === "low"
+          ? "Low confidence"
+          : "Medium confidence";
+
     return (
-      <div className="space-y-4 animate-fade-in">
+      <div className="space-y-5 animate-fade-in">
         <StepHeader step={4} total={4} onBack={goBack} title="Result" />
 
-        <div className={`rounded-3xl border p-6 shadow-sm ${c.cardClass}`}>
+        {/* Dominant result card */}
+        <div
+          className={`relative overflow-hidden rounded-[2rem] border-2 p-8 shadow-xl ${c.cardClass}`}
+        >
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-background/80 shadow-sm">
-              <Icon className={`h-12 w-12 ${c.iconClass}`} />
+            <div className="flex h-28 w-28 items-center justify-center rounded-full bg-background/90 shadow-lg ring-4 ring-background/40">
+              <Icon className={`h-16 w-16 ${c.iconClass}`} strokeWidth={2.25} />
             </div>
-            <div
-              className={`mt-4 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${c.badgeClass}`}
-            >
-              {c.label}
-            </div>
+
             <h2
-              className={`mt-3 text-2xl font-semibold tracking-tight ${c.titleClass}`}
+              className={`mt-6 text-3xl font-bold tracking-tight leading-tight ${c.titleClass}`}
             >
               {state.resultTitle}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-foreground/85">
+
+            <p className="mt-3 max-w-xs text-base leading-6 text-foreground/85">
               {state.resultReason}
             </p>
-            <p className="mt-3 text-xs text-muted-foreground capitalize">
-              Confidence: {state.confidence}
-            </p>
+
+            <div
+              className={`mt-5 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${c.badgeClass}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${c.iconClass} bg-current`} />
+              {confidenceLabel}
+            </div>
           </div>
         </div>
 
         {state.lat !== undefined && state.lng !== undefined && (
-          <div className="rounded-3xl border border-border bg-card p-3 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-2 shadow-sm">
             <LocationMap lat={state.lat} lng={state.lng} />
           </div>
         )}
 
-        {!isNo && (
-          <button
-            onClick={startTimer}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-status-blue py-4 font-semibold text-white shadow-lg shadow-status-blue/20 active:scale-[0.97] transition-transform"
-          >
-            <Clock3 className="h-5 w-5" />
-            Start parking timer
-          </button>
-        )}
-
-        <button
-          onClick={() => setStep("log")}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card py-4 font-medium text-card-foreground shadow-sm active:scale-[0.97] transition-transform"
-        >
-          {isNo ? (
-            <>
-              <AlertTriangle className="h-5 w-5 text-status-red" />
-              Report confusing sign or location
-            </>
-          ) : (
-            <>
-              <Camera className="h-5 w-5 text-status-blue" />
-              {state.resultKind === "ok" ? "I parked here · Add photo" : "Add photo of sign"}
-            </>
+        {/* Secondary actions */}
+        <div className="space-y-2 pt-1">
+          {!isNo && (
+            <button
+              onClick={startTimer}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-status-blue py-3.5 text-sm font-semibold text-white shadow-md shadow-status-blue/20 active:scale-[0.97] transition-transform"
+            >
+              <Clock3 className="h-4 w-4" />
+              Start parking timer
+            </button>
           )}
-        </button>
 
-        <button
-          onClick={checkAnotherSpot}
-          className="w-full rounded-2xl border border-border bg-background py-4 font-medium text-muted-foreground active:scale-[0.97] transition-transform"
-        >
-          Check another spot
-        </button>
+          <button
+            onClick={() => setStep("log")}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-sm font-medium text-card-foreground active:scale-[0.97] transition-transform"
+          >
+            {isNo ? (
+              <>
+                <AlertTriangle className="h-4 w-4 text-status-red" />
+                Report confusing sign or location
+              </>
+            ) : (
+              <>
+                <Camera className="h-4 w-4 text-status-blue" />
+                {state.resultKind === "ok" ? "I parked here · Add photo" : "Add photo of sign"}
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={checkAnotherSpot}
+            className="w-full rounded-2xl py-3 text-sm font-medium text-muted-foreground hover:text-foreground active:scale-[0.97] transition-all"
+          >
+            Check another spot
+          </button>
+        </div>
       </div>
     );
   }
