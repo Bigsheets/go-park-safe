@@ -1,3 +1,4 @@
+import { inWinterOvernight, deriveResult } from "@/lib/parkingRules";
 import { useEffect, useRef, useState } from "react";
 import {
   MapPin,
@@ -44,39 +45,6 @@ interface Props {
 }
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
-
-function inWinterOvernight(date: Date) {
-  const month = date.getMonth();
-  const day = date.getDate();
-  const inSeason = month === 0 || month === 1 || (month === 2 && day <= 15);
-  if (!inSeason) return false;
-  const total = date.getHours() * 60 + date.getMinutes();
-  return total >= 2 * 60 + 30 && total < 6 * 60;
-}
-
-function deriveResult(s: FlowState) {
-  if (s.hydrant || s.driveway) {
-    return {
-      kind: "no" as const,
-      title: "Do not park here",
-      reason: "Too close to a fire hydrant or driveway.",
-      confidence: "high" as const,
-    };
-  }
-  if (s.sign) {
-    return {
-      kind: "risky" as const,
-      title: "This spot may be restricted",
-      reason: "Parking signs may apply (time limits or restrictions).",
-      confidence: "medium" as const,
-    };
-  }
-  return {
-    kind: "ok" as const,
-    title: "You can likely park here",
-    reason: "No obvious restrictions detected.",
-    confidence: "medium" as const,
-  };
 }
 
 const resultStyles: Record<
