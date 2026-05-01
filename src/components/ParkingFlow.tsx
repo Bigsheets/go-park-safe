@@ -349,6 +349,7 @@ const ParkingFlow = ({ onExit }: Props) => {
   };
 
   const checkAnotherSpot = () => {
+    clearReminders();
     setState({});
     setTimerStartedAt(null);
     setTimerEndsAt(null);
