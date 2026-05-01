@@ -622,13 +622,27 @@ const ParkingFlow = ({ onExit }: Props) => {
         {/* Secondary actions */}
         <div className="space-y-2 pt-4">
           {!isNo && (
-            <button
-              onClick={startTimer}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-status-blue/30 bg-status-blue/10 py-3 text-sm font-medium text-status-blue active:scale-[0.97] transition-transform"
-            >
-              <Clock3 className="h-4 w-4" />
-              Start parking timer
-            </button>
+            <>
+              <label className="flex w-full items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 cursor-pointer">
+                <span className="flex items-center gap-2 text-sm font-medium text-card-foreground">
+                  <Bell className="h-4 w-4 text-status-blue" />
+                  Enable reminders
+                </span>
+                <input
+                  type="checkbox"
+                  checked={remindersEnabled}
+                  onChange={(e) => setRemindersEnabled(e.target.checked)}
+                  className="h-4 w-4 accent-status-blue"
+                />
+              </label>
+              <button
+                onClick={startTimer}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-status-blue/30 bg-status-blue/10 py-3 text-sm font-medium text-status-blue active:scale-[0.97] transition-transform"
+              >
+                <Clock3 className="h-4 w-4" />
+                Start parking timer
+              </button>
+            </>
           )}
 
           <button
