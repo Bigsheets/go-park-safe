@@ -365,8 +365,18 @@ const ParkingFlow = ({ onExit }: Props) => {
     setTimerEndsAt(endAt);
     setNow(startAt);
     setStep("timer");
+    if (remindersEnabled) {
+      const p = await requestNotifPermission();
+      if (p === "granted") {
+        scheduleReminders(endAt);
+        toast.success("Timer started · reminders enabled.");
+      } else {
+        toast.success("Timer started. Notifications not enabled.");
+      }
+    } else {
+      toast.success("2-hour parking timer started.");
+    }
     await logSession({ user_parked: true, timer_started: true });
-    toast.success("2-hour parking timer started.");
   };
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
