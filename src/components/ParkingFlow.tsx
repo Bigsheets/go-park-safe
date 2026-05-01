@@ -866,6 +866,7 @@ const ParkingFlow = ({ onExit }: Props) => {
 
         <button
           onClick={() => {
+            clearReminders();
             setTimerEndsAt(null);
             setTimerStartedAt(null);
             toast.success("Timer cleared.");
