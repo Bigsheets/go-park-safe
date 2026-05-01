@@ -519,18 +519,24 @@ const ParkingFlow = ({ onExit }: Props) => {
           className={`relative overflow-hidden rounded-[2rem] border-2 p-8 shadow-xl ${c.cardClass}`}
         >
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-28 w-28 items-center justify-center rounded-full bg-background/90 shadow-lg ring-4 ring-background/40">
-              <Icon className={`h-16 w-16 ${c.iconClass}`} strokeWidth={2.25} />
+            <div
+              className={`flex h-32 w-32 items-center justify-center rounded-full bg-background/95 ring-8 shadow-2xl ${c.iconRingClass}`}
+            >
+              <Icon className={`h-20 w-20 ${c.iconClass}`} strokeWidth={2.5} />
             </div>
 
             <h2
-              className={`mt-6 text-3xl font-bold tracking-tight leading-tight ${c.titleClass}`}
+              className={`mt-7 text-3xl font-bold tracking-tight leading-tight ${c.titleClass}`}
             >
               {state.resultTitle}
             </h2>
 
             <p className="mt-3 max-w-xs text-base leading-6 text-foreground/85">
               {state.resultReason}
+            </p>
+
+            <p className="mt-2 text-xs text-muted-foreground">
+              Based on your answers
             </p>
 
             <div
@@ -543,17 +549,17 @@ const ParkingFlow = ({ onExit }: Props) => {
         </div>
 
         {state.lat !== undefined && state.lng !== undefined && (
-          <div className="rounded-2xl border border-border bg-card p-2 shadow-sm">
+          <div className="rounded-2xl border border-border/50 bg-card/60 p-2 opacity-90">
             <LocationMap lat={state.lat} lng={state.lng} />
           </div>
         )}
 
         {/* Secondary actions */}
-        <div className="space-y-2 pt-1">
+        <div className="space-y-2 pt-4">
           {!isNo && (
             <button
               onClick={startTimer}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-status-blue py-3.5 text-sm font-semibold text-white shadow-md shadow-status-blue/20 active:scale-[0.97] transition-transform"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-status-blue/30 bg-status-blue/10 py-3 text-sm font-medium text-status-blue active:scale-[0.97] transition-transform"
             >
               <Clock3 className="h-4 w-4" />
               Start parking timer
@@ -562,7 +568,7 @@ const ParkingFlow = ({ onExit }: Props) => {
 
           <button
             onClick={() => setStep("log")}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-sm font-medium text-card-foreground active:scale-[0.97] transition-transform"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-medium text-card-foreground active:scale-[0.97] transition-transform"
           >
             {isNo ? (
               <>
