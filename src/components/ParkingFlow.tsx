@@ -180,17 +180,71 @@ const ParkingFlow = ({ onExit }: Props) => {
   const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null);
   const [timerEndsAt, setTimerEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
-  const [reminders, setReminders] = useState({
-    fifteen: true,
-    ten: false,
-    expiry: true,
-  });
+  const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    typeof window !== "undefined" && "Notification" in window
+      ? Notification.permission
+      : "unsupported",
+  );
+  const reminderTimeouts = useRef<number[]>([]);
 
   useEffect(() => {
     if (!timerEndsAt) return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [timerEndsAt]);
+
+  const clearReminders = () => {
+    reminderTimeouts.current.forEach((id) => window.clearTimeout(id));
+    reminderTimeouts.current = [];
+  };
+
+  useEffect(() => {
+    return () => clearReminders();
+  }, []);
+
+  const showNotification = (body: string) => {
+    try {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Go Park Safe", { body, icon: "/favicon.ico" });
+      }
+    } catch (e) {
+      console.warn("Notification failed", e);
+    }
+  };
+
+  const scheduleReminders = (endAt: number) => {
+    clearReminders();
+    const schedule = (msFromNow: number, body: string) => {
+      if (msFromNow <= 0) return;
+      const id = window.setTimeout(() => showNotification(body), msFromNow);
+      reminderTimeouts.current.push(id);
+    };
+    const remaining = endAt - Date.now();
+    schedule(
+      remaining - 15 * 60 * 1000,
+      "Parking reminder: 15 minutes left before your parking time expires.",
+    );
+    schedule(
+      remaining - 5 * 60 * 1000,
+      "Parking reminder: 5 minutes left. Time to move soon.",
+    );
+    schedule(remaining, "Parking time expired. Move your vehicle now.");
+  };
+
+  const requestNotifPermission = async () => {
+    if (!("Notification" in window)) {
+      setNotifPermission("unsupported");
+      return "unsupported" as const;
+    }
+    if (Notification.permission === "default") {
+      const p = await Notification.requestPermission();
+      setNotifPermission(p);
+      return p;
+    }
+    setNotifPermission(Notification.permission);
+    return Notification.permission;
+  };
 
   const logSession = async (
     overrides: Partial<{ user_parked: boolean; timer_started: boolean }> = {},
@@ -295,6 +349,7 @@ const ParkingFlow = ({ onExit }: Props) => {
   };
 
   const checkAnotherSpot = () => {
+    clearReminders();
     setState({});
     setTimerStartedAt(null);
     setTimerEndsAt(null);
@@ -311,8 +366,18 @@ const ParkingFlow = ({ onExit }: Props) => {
     setTimerEndsAt(endAt);
     setNow(startAt);
     setStep("timer");
+    if (remindersEnabled) {
+      const p = await requestNotifPermission();
+      if (p === "granted") {
+        scheduleReminders(endAt);
+        toast.success("Timer started · reminders enabled.");
+      } else {
+        toast.success("Timer started. Notifications not enabled.");
+      }
+    } else {
+      toast.success("2-hour parking timer started.");
+    }
     await logSession({ user_parked: true, timer_started: true });
-    toast.success("2-hour parking timer started.");
   };
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -557,13 +622,27 @@ const ParkingFlow = ({ onExit }: Props) => {
         {/* Secondary actions */}
         <div className="space-y-2 pt-4">
           {!isNo && (
-            <button
-              onClick={startTimer}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-status-blue/30 bg-status-blue/10 py-3 text-sm font-medium text-status-blue active:scale-[0.97] transition-transform"
-            >
-              <Clock3 className="h-4 w-4" />
-              Start parking timer
-            </button>
+            <>
+              <label className="flex w-full items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 cursor-pointer">
+                <span className="flex items-center gap-2 text-sm font-medium text-card-foreground">
+                  <Bell className="h-4 w-4 text-status-blue" />
+                  Enable reminders
+                </span>
+                <input
+                  type="checkbox"
+                  checked={remindersEnabled}
+                  onChange={(e) => setRemindersEnabled(e.target.checked)}
+                  className="h-4 w-4 accent-status-blue"
+                />
+              </label>
+              <button
+                onClick={startTimer}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-status-blue/30 bg-status-blue/10 py-3 text-sm font-medium text-status-blue active:scale-[0.97] transition-transform"
+              >
+                <Clock3 className="h-4 w-4" />
+                Start parking timer
+              </button>
+            </>
           )}
 
           <button
@@ -767,41 +846,42 @@ const ParkingFlow = ({ onExit }: Props) => {
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-status-blue" />
-            <p className="text-sm font-medium">Reminders</p>
-          </div>
-          <div className="mt-3 space-y-2">
-            {(
-              [
-                { key: "fifteen", label: "15 minutes before" },
-                { key: "ten", label: "10 minutes before" },
-                { key: "expiry", label: "At expiry" },
-              ] as const
-            ).map((opt) => (
-              <label
-                key={opt.key}
-                className="flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3 cursor-pointer"
-              >
-                <span className="text-sm">{opt.label}</span>
-                <input
-                  type="checkbox"
-                  checked={reminders[opt.key]}
-                  onChange={(e) =>
-                    setReminders((prev) => ({
-                      ...prev,
-                      [opt.key]: e.target.checked,
-                    }))
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-status-blue" />
+              <p className="text-sm font-medium">
+                {notifPermission === "granted" && reminderTimeouts.current.length > 0
+                  ? "Reminders enabled"
+                  : "Notifications not enabled"}
+              </p>
+            </div>
+            {notifPermission !== "granted" && notifPermission !== "unsupported" && (
+              <button
+                onClick={async () => {
+                  const p = await requestNotifPermission();
+                  if (p === "granted" && timerEndsAt) {
+                    scheduleReminders(timerEndsAt);
+                    toast.success("Reminders enabled.");
+                  } else if (p === "denied") {
+                    toast.error("Notifications blocked in your browser.");
                   }
-                  className="h-4 w-4 accent-status-blue"
-                />
-              </label>
-            ))}
+                }}
+                className="rounded-full bg-status-blue px-3 py-1 text-xs font-semibold text-white active:scale-[0.97] transition-transform"
+              >
+                Enable
+              </button>
+            )}
           </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            {notifPermission === "granted" && reminderTimeouts.current.length > 0
+              ? "We'll remind you 15 min before, 5 min before, and at expiry."
+              : "Notifications are not enabled. Keep this screen open to track your timer."}
+          </p>
         </div>
 
         <button
           onClick={() => {
+            clearReminders();
             setTimerEndsAt(null);
             setTimerStartedAt(null);
             toast.success("Timer cleared.");
