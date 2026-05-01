@@ -94,33 +94,36 @@ const resultStyles: Record<
   ok: {
     icon: CheckCircle2,
     cardClass:
-      "bg-status-green-bg border-status-green/30 [background-image:var(--gradient-green)]",
-    badgeClass: "bg-status-green/15 text-status-green border-status-green/25",
+      "bg-status-green-bg border-status-green/50 [background-image:var(--gradient-green)]",
+    badgeClass: "bg-status-green/20 text-status-green border-status-green/40",
     titleClass: "text-status-green",
     iconClass: "text-status-green",
     label: "Likely allowed",
     ringClass: "stroke-status-green",
+    iconRingClass: "ring-status-green/25 shadow-status-green/30",
   },
   risky: {
     icon: AlertTriangle,
     cardClass:
-      "bg-status-yellow-bg border-status-yellow/30 [background-image:var(--gradient-yellow)]",
+      "bg-status-yellow-bg border-status-yellow/50 [background-image:var(--gradient-yellow)]",
     badgeClass:
-      "bg-status-yellow/15 text-status-yellow border-status-yellow/25",
+      "bg-status-yellow/20 text-status-yellow border-status-yellow/40",
     titleClass: "text-status-yellow",
     iconClass: "text-status-yellow",
     label: "Caution",
     ringClass: "stroke-status-yellow",
+    iconRingClass: "ring-status-yellow/25 shadow-status-yellow/30",
   },
   no: {
     icon: XCircle,
     cardClass:
-      "bg-status-red-bg border-status-red/30 [background-image:var(--gradient-red)]",
-    badgeClass: "bg-status-red/15 text-status-red border-status-red/25",
+      "bg-status-red-bg border-status-red/50 [background-image:var(--gradient-red)]",
+    badgeClass: "bg-status-red/20 text-status-red border-status-red/40",
     titleClass: "text-status-red",
     iconClass: "text-status-red",
     label: "Do not park",
     ringClass: "stroke-status-red",
+    iconRingClass: "ring-status-red/25 shadow-status-red/30",
   },
 };
 
