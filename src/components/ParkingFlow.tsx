@@ -180,17 +180,71 @@ const ParkingFlow = ({ onExit }: Props) => {
   const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null);
   const [timerEndsAt, setTimerEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
-  const [reminders, setReminders] = useState({
-    fifteen: true,
-    ten: false,
-    expiry: true,
-  });
+  const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    typeof window !== "undefined" && "Notification" in window
+      ? Notification.permission
+      : "unsupported",
+  );
+  const reminderTimeouts = useRef<number[]>([]);
 
   useEffect(() => {
     if (!timerEndsAt) return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [timerEndsAt]);
+
+  const clearReminders = () => {
+    reminderTimeouts.current.forEach((id) => window.clearTimeout(id));
+    reminderTimeouts.current = [];
+  };
+
+  useEffect(() => {
+    return () => clearReminders();
+  }, []);
+
+  const showNotification = (body: string) => {
+    try {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Go Park Safe", { body, icon: "/favicon.ico" });
+      }
+    } catch (e) {
+      console.warn("Notification failed", e);
+    }
+  };
+
+  const scheduleReminders = (endAt: number) => {
+    clearReminders();
+    const schedule = (msFromNow: number, body: string) => {
+      if (msFromNow <= 0) return;
+      const id = window.setTimeout(() => showNotification(body), msFromNow);
+      reminderTimeouts.current.push(id);
+    };
+    const remaining = endAt - Date.now();
+    schedule(
+      remaining - 15 * 60 * 1000,
+      "Parking reminder: 15 minutes left before your parking time expires.",
+    );
+    schedule(
+      remaining - 5 * 60 * 1000,
+      "Parking reminder: 5 minutes left. Time to move soon.",
+    );
+    schedule(remaining, "Parking time expired. Move your vehicle now.");
+  };
+
+  const requestNotifPermission = async () => {
+    if (!("Notification" in window)) {
+      setNotifPermission("unsupported");
+      return "unsupported" as const;
+    }
+    if (Notification.permission === "default") {
+      const p = await Notification.requestPermission();
+      setNotifPermission(p);
+      return p;
+    }
+    setNotifPermission(Notification.permission);
+    return Notification.permission;
+  };
 
   const logSession = async (
     overrides: Partial<{ user_parked: boolean; timer_started: boolean }> = {},
